@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Group Stages</title>
+</head>
+<body>
+    <h2>Group stages</h2>
+
+    {% for g in groups %}
+    <h3>{{ g.group }}</h3>
+    <table style="border: red solid">
+        <tr>
+            <th>Club Name</th>
+            <th>P</th>
+            <th>W</th>
+            <th>D</th>
+            <th>L</th>
+            <th>GD</th>
+            <th>Pts</th>
+        </tr>
+        <tr>
+            <td>{{ g.group_club_1.club_name|truncatechars:15  }}</td>
+            <td>{{ g.group_club_1.played }}</td>
+            <td>{{ g.group_club_1.wins }}</td>
+            <td>{{ g.group_club_1.draw }}</td>
+            <td>{{ g.group_club_1.lose }}</td>
+            <td>{{ g.group_club_1.gd }}</td>
+            <td>{{ g.group_club_1.points }}</td>
+        </tr>
+        <tr>
+            <td>{{ g.group_club_2.club_name|truncatechars:15  }}</td>
+            <td>{{ g.group_club_2.played }}</td>
+            <td>{{ g.group_club_2.wins }}</td>
+            <td>{{ g.group_club_2.draw }}</td>
+            <td>{{ g.group_club_2.lose }}</td>
+            <td>{{ g.group_club_2.gd }}</td>
+            <td>{{ g.group_club_2.points }}</td>
+        </tr>
+        <tr>
+            <td>{{ g.group_club_3.club_name|truncatechars:15  }}</td>
+            <td>{{ g.group_club_3.played }}</td>
+            <td>{{ g.group_club_3.wins }}</td>
+            <td>{{ g.group_club_3.draw }}</td>
+            <td>{{ g.group_club_3.lose }}</td>
+            <td>{{ g.group_club_3.gd }}</td>
+            <td>{{ g.group_club_3.points }}</td>
+        </tr>
+        <tr>
+            <td>{{ g.group_club_4.club_name|truncatechars:15  }}</td>
+            <td>{{ g.group_club_4.played }}</td>
+            <td>{{ g.group_club_4.wins }}</td>
+            <td>{{ g.group_club_4.draw }}</td>
+            <td>{{ g.group_club_4.lose }}</td>
+            <td>{{ g.group_club_4.gd }}</td>
+            <td>{{ g.group_club_4.points }}</td>
+        </tr>
+    </table>
+{% endfor %}
+
+    {% for g in history %}
+    <p>{{ g.club.captain_name }}</p>
+    <tr>
+            <td>{{ g.tournament  }}</td>
+            <td>{{ g.played }}</td>
+            <td>{{ g.wins }}</td>
+            <td>{{ g.draws }}</td>
+            <td>{{ g.losses }}</td>
+        </tr>
+
+{% endfor %}
+
+</body>
+</html>

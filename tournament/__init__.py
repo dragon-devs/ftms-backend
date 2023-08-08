@@ -1,0 +1,2 @@
+class MyTournament:
+    pass
