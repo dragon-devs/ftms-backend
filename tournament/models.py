@@ -46,6 +46,7 @@ class MyTournament(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
@@ -478,7 +479,7 @@ class Match(models.Model):
     match_number = models.PositiveIntegerField(default=0)
 
     class Meta:
-        ordering = ['-tournament', 'group', 'match_number']
+        ordering = ['tournament', 'group', 'match_number']
 
     def __str__(self):
         return f"{self.team_1.club_name} vs {self.team_2.club_name} in {self.group}"
