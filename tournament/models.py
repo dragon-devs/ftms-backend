@@ -44,6 +44,8 @@ class MyTournament(models.Model):
     paired_teams = models.ManyToManyField(QualifyTeam, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
+    class Meta:
+        ordering = ['-created_at']
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
