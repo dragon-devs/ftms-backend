@@ -29,15 +29,13 @@ SECRET_KEY = 'django-insecure-o9*q22z1_yr0@o-+vjtqe!-bt553)0!+tii8!t5_58@v(g(j7d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.10.4', 'localhost', '127.0.0.1', '192.168.173.1', '192.168.137.1', '192.168.43.52', '192.168.0.163']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.163' "ftmsapi.pythonanywhere.com"]
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Add the URL of your frontend here
     "http://127.0.0.1:3000",
-    "http://192.168.10.5:3000",
-    "http://192.168.137.1:3000",
-    "http://192.168.43.52:3000",
     "http://192.168.0.163:3000",
+    "https://ftms-drh.web.app",
 ]
 
 # Application definition
@@ -139,14 +137,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = 'static/'
-STORAGES = {
-    # ...
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
