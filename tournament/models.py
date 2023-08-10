@@ -48,6 +48,8 @@ class MyTournament(models.Model):
         ordering = ['-created_at']
 
     def save(self, *args, **kwargs):
+        self.tournament_name = self.tournament_name.capitalize()
+
         super().save(*args, **kwargs)
 
     """
@@ -164,10 +166,9 @@ class GroupClub(models.Model):
     gd = models.IntegerField(default=0)
     points = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
-    group_table_number = models.IntegerField(default=0)
 
     class Meta:
-        ordering = ['group', '-points', '-gd']
+        ordering = ['tournament','group', '-points', '-gd']
 
     def calculate_goal_difference(self):
         gd = int(self.gf) - int(self.ga)

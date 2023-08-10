@@ -17,12 +17,10 @@ from knockout.models import QualifyTeam
 User = get_user_model()
 
 
-
 def create_club_image(instance):
     club_name = instance.club_name
-    #first_three_words = " ".join(club_name.split()[:3]).upper()
+    # first_three_words = " ".join(club_name.split()[:3]).upper()
     first_three_words = club_name[:3].upper()
-
 
     # Load the background image
     label_assets = ["club_images/Asset 1.png",
@@ -76,6 +74,7 @@ class Club(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
     def clean(self):
         # Check if club_name, captain_name, or phone_number already exist in the database
         existing_clubs = Club.objects.filter(
@@ -90,15 +89,18 @@ class Club(models.Model):
             raise ValidationError("A club with the same name, captain name, or phone number already exists.")
 
     def save(self, *args, **kwargs):
+        # Capitalize club_name and captain_name before saving
+        self.club_name = self.club_name.capitalize()
+        self.captain_name = self.captain_name.capitalize()
+
+
         if not self.club_image:  # Only create the image if it doesn't already exist
             image_data = create_club_image(self)
             self.club_image.save(f"{self.club_name}.png", ContentFile(image_data), save=False)
         super(Club, self).save(*args, **kwargs)
 
-
     def __str__(self):
         return self.club_name
-
 
     def joined_tournaments(self):
         # Get the primary key of the current club instance
@@ -121,7 +123,7 @@ class Club(models.Model):
         qualify_teams = QualifyTeam.objects.filter(team__club_name_id=club_id)
         # Get the tournaments associated with the found QualifyTeam instances
         tournaments = Tournament.objects.filter(Q(roundof16__in=qualify_teams) |
-                                                  Q(quarterfinal__in=qualify_teams) |
-                                                  Q(semifinal__in=qualify_teams) |
-                                                  Q(final__in=qualify_teams)).distinct()
+                                                Q(quarterfinal__in=qualify_teams) |
+                                                Q(semifinal__in=qualify_teams) |
+                                                Q(final__in=qualify_teams)).distinct()
         return tournaments

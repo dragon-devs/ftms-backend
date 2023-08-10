@@ -18,7 +18,7 @@ class MyTournamentAdmin(admin.ModelAdmin):
 
 @admin.register(models.GroupClub)
 class GroupClubAdmin(admin.ModelAdmin):
-    list_display = ['tournament', 'group', 'club_name', 'played', 'wins', 'draw', 'lose', 'gf', 'ga', 'gd', 'points', 'group_table_number']
+    list_display = ['tournament', 'group', 'club_name', 'played', 'wins', 'draw', 'lose', 'gf', 'ga', 'gd', 'points']
     readonly_fields = ('tournament', 'gd')
     search_fields = ('club_name__club_name', 'tournament__tournament_name')
 
