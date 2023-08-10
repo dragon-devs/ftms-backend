@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 import os
 
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -29,12 +28,11 @@ SECRET_KEY = 'django-insecure-o9*q22z1_yr0@o-+vjtqe!-bt553)0!+tii8!t5_58@v(g(j7d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.163' "ftmsapi.pythonanywhere.com"]
+ALLOWED_HOSTS = ["ftmsapi.pythonanywhere.com", 'localhost', '127.0.0.1']
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # Add the URL of your frontend here
     "http://127.0.0.1:3000",
-    "http://192.168.0.163:3000",
     "https://ftms-drh.web.app",
 ]
 
@@ -53,7 +51,6 @@ INSTALLED_APPS = [
     'tournament.apps.TournamentConfig',
     'knockout.apps.KnockoutConfig',
     'group_stages.apps.GroupStagesConfig',
-
 
 ]
 
@@ -91,7 +88,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'football_tournaments_management_system.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
@@ -101,7 +97,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -121,7 +116,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 
@@ -133,14 +127,12 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = 'static/'
-
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
