@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -28,13 +30,31 @@ class MyTournamentSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='mytournament-detail')
     current_stage_display = ChoicesDisplayField(choices=MyTournament.STAGE_CHOICES, source='current_stage',
                                                 read_only=True)
-    tournament_type_display = ChoicesDisplayField(choices=MyTournament.TOURNAMENT_TYPE, source='tournament_type',
+    tournament_type_display = ChoicesDisplayField(choices=MyTournament.TOURNAMENT_TYPE_CHOICES,
+                                                  source='tournament_type',
                                                   read_only=True)
     teams_selection_display = ChoicesDisplayField(choices=MyTournament.TEAM_SIZE, source='teams_selection',
                                                   read_only=True)
 
+    def to_representation(self, instance):
+        # Serialize the instance data
+        data = super().to_representation(instance)
+
+        # Determine the value of match_per_day
+        match_per_day = data.get('match_per_day')
+
+        # Exclude match_time_2 from the serialized data if match_per_day is 1
+        if match_per_day == '1':
+            data.pop('match_time_2', None)
+
+        return data
+
     def create(self, validated_data):
         # Generate the slug from the tournament_name
+        # If match_per_day is 1, set match_time_2 to None
+        if validated_data['match_per_day'] == '1':
+            validated_data['match_time_2'] = None
+
         slug = slugify(validated_data['tournament_name'])
 
         # Add the slug to the validated data before creating the instance
@@ -42,6 +62,9 @@ class MyTournamentSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        if instance.match_per_day == '1':
+            validated_data['match_time_2'] = None
+
         # Generate the slug from the tournament_name
         slug = slugify(validated_data['tournament_name'])
 
@@ -54,7 +77,8 @@ class MyTournamentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MyTournament
-        fields = ['url', 'id', 'tournament_name', 'teams_selection', 'tournament_type',
+        fields = ['url', 'id', 'tournament_name', 'tournament_type', 'match_per_day', 'match_time_1', 'match_time_2',
+                  'teams_selection',
                   'teams_selection_display', 'tournament_type_display',
                   'current_stage_display', 'champion']
 
@@ -153,13 +177,9 @@ class Club_name(serializers.ModelSerializer):
 
 
 class MatchSerializer(serializers.ModelSerializer):
-    # team_1 = Club_name()
-    # team_2 = Club_name()
     tournament = MyTournamentSerializer()
     team_1 = GroupClubSerializer()
     team_2 = GroupClubSerializer()
-
-    # tournament = MyTournamentSerializer()
 
     class Meta:
         model = Match

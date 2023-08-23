@@ -141,7 +141,7 @@ def create_round_of_32_matches(tournament):
                 team1 = group1[j]
                 team2 = group2[-(j + 1)]
                 if team1 not in paired_teams and team2 not in paired_teams and team2.group != team1.group:
-                    round_of_32_match = RoundOf16.objects.create(
+                    round_of_32_match = RoundOf32.objects.create(
                         tournament=tournament,
                         team1=team1,
                         team2=team2,
@@ -184,11 +184,11 @@ class RoundOf32(models.Model):
                 self.team2.position = self.position
                 self.team2.save()
 
-            all_round_of_16_matches_ended = all(
+            all_round_of_32_matches_ended = all(
                 match.is_match_ended for match in RoundOf32.objects.filter(tournament=self.tournament))
-            if all_round_of_16_matches_ended:
+            if all_round_of_32_matches_ended:
                 # Update the tournament's current stage to Quarterfinals
-                self.tournament.current_stage = 'RoundOf16'
+                self.tournament.current_stage = 'Round16'
                 self.tournament.save()
 
             create_round_of_16_matches(self.tournament)
@@ -203,44 +203,108 @@ class RoundOf32(models.Model):
 
 def create_round_of_16_matches(tournament):
     if tournament.current_stage == 'Round16':
-        qualified_teams = QualifyTeam.objects.filter(tournament=tournament).order_by('group', 'position')
+        qualified_teams_checking = QualifyTeam.objects.filter(tournament=tournament)
+        if qualified_teams_checking.count() == 16 and all_group_matches_ended(tournament):
+            print('directmatches16')
+            qualified_teams = QualifyTeam.objects.filter(tournament=tournament).order_by('group', 'position')
 
-        # Group the qualified teams by group
-        groups = {}
-        for team in qualified_teams:
-            if team.group in groups:
-                groups[team.group].append(team)
-            else:
-                groups[team.group] = [team]
+            # Group the qualified teams by group
+            groups = {}
+            for team in qualified_teams:
+                if team.group in groups:
+                    groups[team.group].append(team)
+                else:
+                    groups[team.group] = [team]
 
-        # Create RoundOf16 matches
-        round_of_16_matches = []
-        group_keys = list(groups.keys())
-        paired_teams = list(tournament.paired_teams.all())
-        count = 1
-        for i in range(0, len(group_keys), 2):
-            group1 = groups[group_keys[i]]
-            group2 = groups[group_keys[i + 1]]
-            for j in range(len(group1)):
-                team1 = group1[j]
-                team2 = group2[-(j + 1)]
-                if team1 not in paired_teams and team2 not in paired_teams and team2.group != team1.group:
-                    round_of_16_match = RoundOf16.objects.create(
-                        tournament=tournament,
-                        team1=team1,
-                        team2=team2,
-                        position=count
-                    )
+            # Create RoundOf16 matches
+            round_of_16_matches = []
+            group_keys = list(groups.keys())
+            paired_teams = list(tournament.paired_teams.all())
+            count = 1
+            for i in range(0, len(group_keys), 2):
+                group1 = groups[group_keys[i]]
+                group2 = groups[group_keys[i + 1]]
+                for j in range(len(group1)):
+                    team1 = group1[j]
+                    team2 = group2[-(j + 1)]
+                    if team1 not in paired_teams and team2 not in paired_teams and team2.group != team1.group:
+                        round_of_16_match = RoundOf16.objects.create(
+                            tournament=tournament,
+                            team1=team1,
+                            team2=team2,
+                            position=count
+                        )
 
-                    # Determine the winner and update the QualifyTeam instances
+                        # Determine the winner and update the QualifyTeam instances
 
-                    count += 1
-                    round_of_16_matches.append(round_of_16_match)
-                    paired_teams.append(team1)
-                    paired_teams.append(team2)
+                        count += 1
+                        round_of_16_matches.append(round_of_16_match)
+                        paired_teams.append(team1)
+                        paired_teams.append(team2)
 
-        tournament.paired_teams.set(paired_teams)
-        return round_of_16_matches
+            tournament.paired_teams.set(paired_teams)
+            return round_of_16_matches
+        else:
+            print('Received from Round of 32 Round of 16 matches')
+
+            # Retrieve the qualified teams and order them by position
+            qualified_teams = QualifyTeam.objects.filter(tournament=tournament, r32w=True).order_by(
+                'position')
+
+            paired_teams_odd = []
+            paired_teams_even = []
+
+            def match_exists(team1, team2):
+                return RoundOf16.objects.filter(
+                    tournament=tournament,
+                    team1=team1,
+                    team2=team2,
+                ).exists()
+
+            round_of_16_matches = []
+
+            if qualified_teams.count() >= 3:
+                paired_teams_odd = []
+                paired_teams_even = []
+
+                for team in qualified_teams:
+                    if team.position in [1, 3, 5, 7, 9, 11, 13, 15]:
+                        paired_teams_odd.append(team)
+                    else:
+                        paired_teams_even.append(team)
+
+                # Pair the teams with odd positions (1, 3, 5, 7)
+                for idx in range(0, len(paired_teams_odd), 2):
+                    if idx + 1 < len(paired_teams_odd):
+                        team1_winner = paired_teams_odd[idx]
+                        team2_winner = paired_teams_odd[idx + 1]
+
+                        if not match_exists(team1_winner, team2_winner):
+                            round_of_16_match = RoundOf16.objects.create(
+                                tournament=tournament,
+                                team1=team1_winner,
+                                team2=team2_winner,
+                                position=(idx // 2) + 1  # Assign the correct quarterfinal position
+                            )
+                            round_of_16_matches.append(round_of_16_match)
+
+                # Pair the teams with even positions (2, 4, 6)
+                for idx in range(0, len(paired_teams_even), 2):
+                    if idx + 1 < len(paired_teams_even):
+                        team1_winner = paired_teams_even[idx]
+                        team2_winner = paired_teams_even[idx + 1]
+
+                        if not match_exists(team1_winner, team2_winner):
+                            round_of_16_match = RoundOf16.objects.create(
+                                tournament=tournament,
+                                team1=team1_winner,
+                                team2=team2_winner,
+                                position=((idx // 2) + 1) + len(paired_teams_odd) // 2
+                                # Assign the correct quarterfinal position
+                            )
+                            round_of_16_matches.append(round_of_16_match)
+
+                return round_of_16_matches
 
 
 def update_qualify_teams(group):
@@ -486,6 +550,7 @@ def create_semifinals_matches(tournament):
             round_of_16_matches = []
             group_keys = list(groups.keys())
             paired_teams = list(tournament.paired_teams.all())
+            count = 1
             for i in range(0, len(group_keys), 2):
                 group1 = groups[group_keys[i]]
                 group2 = groups[group_keys[i + 1]]
@@ -497,10 +562,11 @@ def create_semifinals_matches(tournament):
                             tournament=tournament,
                             team1=team1,
                             team2=team2,
+                            position=count
                         )
 
                         # Determine the winner and update the QualifyTeam instances
-
+                        count+1
                         round_of_16_matches.append(round_of_16_match)
                         paired_teams.append(team1)
                         paired_teams.append(team2)
@@ -547,6 +613,7 @@ def create_semifinals_matches(tournament):
                                 tournament=tournament,
                                 team1=team1_winner,
                                 team2=team2_winner,
+                                position=(idx // 2) + 1  # Assign the correct quarterfinal position
                             )
                             semifinals_matches.append(semifinal_match)
 
@@ -561,6 +628,7 @@ def create_semifinals_matches(tournament):
                                 tournament=tournament,
                                 team1=team1_winner,
                                 team2=team2_winner,
+                                position=((idx // 2) + 1) + len(paired_teams_odd) // 2
                                 # Assign the correct quarterfinal position
                             )
                             semifinals_matches.append(semifinal_match)
@@ -579,6 +647,7 @@ class SemiFinal(models.Model):
     team1_score = models.PositiveIntegerField(null=True, blank=True)
     team2_score = models.PositiveIntegerField(null=True, blank=True)
     is_match_ended = models.BooleanField(default=False)
+    position = models.PositiveIntegerField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Call the create_quarterfinal_matches function to create SemiFinals matches
@@ -617,6 +686,7 @@ def create_third_place_match(tournament):
     qualified_teams = QualifyTeam.objects.filter(tournament=tournament, sfl=True)
 
     # Check if there are exactly 2 qualified teams left (the two teams that lost in the SemiFinals)
+
     if qualified_teams.count() == 2:
         team1_loser = qualified_teams[0]
         team2_loser = qualified_teams[1]
@@ -625,6 +695,7 @@ def create_third_place_match(tournament):
             tournament=tournament,
             team1=team1_loser,
             team2=team2_loser,
+            position=1
         )
 
         # Create the final match as well
@@ -647,6 +718,8 @@ class ThirdPlace(models.Model):
     team1_score = models.PositiveIntegerField(null=True, blank=True)
     team2_score = models.PositiveIntegerField(null=True, blank=True)
     is_match_ended = models.BooleanField(default=False)
+    position = models.PositiveIntegerField(null=True, blank=True)
+
 
     def save(self, *args, **kwargs):
         # Call the create_quarterfinal_matches function to create SemiFinals matches
@@ -685,6 +758,7 @@ def create_final_match(tournament):
                 tournament=tournament,
                 team1=team1_winner,
                 team2=team2_winner,
+                position=1,
             )
             return final_match
         return None
@@ -701,6 +775,7 @@ class Final(models.Model):
     team1_score = models.PositiveIntegerField(null=True, blank=True)
     team2_score = models.PositiveIntegerField(null=True, blank=True)
     is_match_ended = models.BooleanField(default=False)
+    position = models.PositiveIntegerField(null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Call the create_quarterfinal_matches function to create SemiFinals matches

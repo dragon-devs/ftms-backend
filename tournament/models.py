@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time, timedelta
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.db import models
@@ -7,6 +7,7 @@ from django.db import models
 from django.db.models import Q, F
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
+from django.utils import timezone
 
 from ftms.models import Club
 from knockout.models import RoundOf16, SemiFinal, Final, ThirdPlace, QuarterFinal, update_qualify_teams, QualifyTeam
@@ -20,7 +21,7 @@ class MyTournament(models.Model):
         ('32', '32 Teams'),
         ('64', '64 Teams'),
     )
-    TOURNAMENT_TYPE = (
+    TOURNAMENT_TYPE_CHOICES = (
         ('Groups', 'Groups & Knockout'),
         ('K/O', 'Knockout'),
     )
@@ -35,12 +36,20 @@ class MyTournament(models.Model):
         ('End', 'Tournament End'),
     )
 
+    MATCH_PER_DAY_CHOICES = (
+        ('1', '1 Match'),
+        ('2', '2 Matches'),
+    )
+
     tournament_name = models.CharField(max_length=255)
     champion = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
     slug = models.SlugField()
-    teams_selection = models.CharField(max_length=2, choices=TEAM_SIZE)
-    tournament_type = models.CharField(max_length=8, choices=TOURNAMENT_TYPE)
+    teams_selection = models.CharField(max_length=2, choices=TEAM_SIZE, default='4')
+    tournament_type = models.CharField(max_length=8, choices=TOURNAMENT_TYPE_CHOICES, default='Groups')
     current_stage = models.CharField(max_length=20, choices=STAGE_CHOICES, default='Group')
+    match_per_day = models.CharField(max_length=1, choices=MATCH_PER_DAY_CHOICES, default='1')
+    match_time_1 = models.TimeField(default=time)
+    match_time_2 = models.TimeField(default=time, blank=True, null=True)
     paired_teams = models.ManyToManyField(QualifyTeam, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
@@ -51,6 +60,77 @@ class MyTournament(models.Model):
         self.tournament_name = self.tournament_name.capitalize()
 
         super().save(*args, **kwargs)
+
+    def schedule_matches(self):
+        print('schedule called.')
+        if self.tournament_type == 'Groups':
+            if self.match_per_day == '1':
+                match_time = datetime.combine(self.created_at.date() + timedelta(days=1), self.match_time_1)
+
+                # Group matches by match_number
+                groups = self.groups.all()
+
+                grouped_matches = {}
+                for group in groups:
+                    for match in group.matches.all():
+                        if match.match_number not in grouped_matches:
+                            grouped_matches[match.match_number] = []
+                        grouped_matches[match.match_number].append(match)
+
+                for match_number, matches in grouped_matches.items():
+                    for index, match in enumerate(matches):
+                        match_date = match_time + timedelta(days=(match_number - 1) * len(groups) + index)
+                        match.date = match_date
+                        match.save()
+                        print(f'Scheduled match {match_number} for group {match.group} on {match_date}')
+
+
+            elif self.match_per_day == '2':
+                match_time_1 = timezone.make_aware(
+                    datetime.combine(self.created_at.date() + timedelta(days=1), self.match_time_1))
+                match_time_2 = timezone.make_aware(
+                    datetime.combine(self.created_at.date() + timedelta(days=1), self.match_time_2))
+
+                groups = self.groups.all()
+                grouped_matches = {}
+
+                for group in groups:
+                    for match in group.matches.all():
+                        if match.match_number not in grouped_matches:
+                            grouped_matches[match.match_number] = []
+                        grouped_matches[match.match_number].append(match)
+
+                print(grouped_matches)
+                day_offset = 0
+                match_count = 0  # Count of matches scheduled for the day
+                for match_number, matches in grouped_matches.items():
+                    for index, match in enumerate(matches):
+                        if len(groups) == 1:
+                            if match_count == 2:
+                                day_offset += 1
+                                match_count = 0
+
+                            if match_number in (1, 3, 5):
+                                match_date = match_time_1 + timedelta(days=day_offset)
+                            else:
+                                match_date = match_time_2 + timedelta(days=day_offset)
+                        else:
+                            if match_count == 2:
+                                day_offset += 1
+                                match_count = 0
+
+                            if index % 2 == 0:
+                                match_date = match_time_1 + timedelta(days=day_offset)
+                            else:
+                                match_date = match_time_2 + timedelta(days=day_offset)
+
+                        match.date = match_date
+                        match.save()
+
+                        match_type = '1st match' if index % 2 == 0 else '2nd match'
+                        print(f'Scheduled match {match_number} ({match_type}) for group {match.group} on {match_date}')
+
+                        match_count += 1
 
     """
      def save(self, *args, **kwargs):
@@ -168,7 +248,7 @@ class GroupClub(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
-        ordering = ['tournament','group', '-points', '-gd']
+        ordering = ['tournament', 'group', '-points', '-gd']
 
     def calculate_goal_difference(self):
         gd = int(self.gf) - int(self.ga)
@@ -486,7 +566,15 @@ class Match(models.Model):
         return f"{self.team_1.club_name} vs {self.team_2.club_name} in {self.group}"
 
     def save(self, *args, **kwargs):
+        is_new_match = self.pk is None  # Check if this is a new match being created
         super().save(*args, **kwargs)
+
+        if is_new_match:
+            group_matches = Match.objects.filter(tournament=self.tournament, group=self.group).order_by('match_number')
+
+            # Check if all matches for the group have been created
+            print(len(group_matches))
+
         if self.is_match_ended:
             self.update_statistics()
             # Check if all matches in the group have ended
@@ -539,6 +627,7 @@ class Match(models.Model):
             self.is_statistics_updated = True
             self.save()
 
+
 @receiver(post_save, sender=GroupClub)
 def create_matches(sender, instance, created, **kwargs):
     if created:
@@ -558,7 +647,7 @@ def create_matches(sender, instance, created, **kwargs):
                 for match_data in match_order:
                     team_1 = teams[match_data[0]]
                     team_2 = teams[match_data[1]]
-                    print(str(match_data[0]), 'vs', str(match_data[1]))
+                    print(str(team_1), 'vs', str(team_2))
 
                     # Check if a match between the two teams already exists
                     existing_match = Match.objects.filter(group=group, team_1=team_1, team_2=team_2).first()
@@ -567,9 +656,11 @@ def create_matches(sender, instance, created, **kwargs):
                                       match_number=match_number)
                         match.save()
                     match_number += 1
+
+                instance.tournament.schedule_matches()
+
             else:
                 print("The group should have exactly four teams to create matches.")
-
 
 
 """

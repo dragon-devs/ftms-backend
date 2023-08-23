@@ -1,4 +1,6 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
+from django.utils import timezone
 
 # Create your views here.
 from rest_framework import generics, viewsets, status
@@ -53,13 +55,28 @@ class MyTournamentViewSet(viewsets.ModelViewSet):
                     club_name = club_data.get('club_name')
                     club_id = club_data.get('club_id')
 
-                    if club_id:
-                        club = Club.objects.get(pk=club_id)
-                    else:
-                        club = Club.objects.get(club_name=club_name)
+                    try:
+                        if club_id:
+                            club = Club.objects.get(pk=club_id)
+                        else:
+                            club = Club.objects.get(club_name=club_name)
 
+                        # Debug: Print information about the club being assigned
+                        print(f"Assigned club to group {group[0]} position {j + 1}: {club}")
+
+                    except ObjectDoesNotExist:
+                        # Handle the case where the club with the given ID or name does not exist
+                        print("Club does not exist:", club_id, club_name)
+                        # You can raise an exception, skip this club, or take other appropriate actions
+                        pass
+                    except Club.MultipleObjectsReturned:
+                        # Handle the case where multiple clubs have the same name
+                        print("Multiple clubs with the same name:", club_name)
+                        # You can raise an exception, skip this club, or take other appropriate actions
+                        pass
+
+                        # Assign the club to the group
                     setattr(group_instance, f'group_club_{j + 1}', club)
-
             group_instance.save()
 
         headers = self.get_success_headers(tournament_serializer.data)
@@ -99,6 +116,35 @@ class MatchViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         else:
             return Response({"detail": "Missing 'tournament_pk' parameter."}, status=400)
+
+    @action(detail=False, methods=['GET'])
+    def previous_matches(self, request):
+        today = timezone.now().date()
+        yesterday = today - timezone.timedelta(days=1)
+
+        queryset = self.get_queryset().filter(
+            date__lt=today,
+            is_match_ended=True
+        ).exclude(
+            date__gte=today
+        )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['GET'])
+    def upcoming_matches(self, request):
+        today = timezone.now().date()
+        tomorrow = today + timezone.timedelta(days=2)
+
+        queryset = self.get_queryset().filter(
+            date__gte=today,
+            date__lt=tomorrow,
+            is_match_ended=False
+        )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class GroupClubViewSet(viewsets.ModelViewSet):
     serializer_class = GroupClubSerializer
