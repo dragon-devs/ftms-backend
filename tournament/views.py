@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
 from django.utils import timezone
@@ -119,33 +121,26 @@ class MatchViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def previous_matches(self, request):
-        today = timezone.now().date()
-        yesterday = today - timezone.timedelta(days=1)
-
         queryset = self.get_queryset().filter(
-            date__lt=today,
             is_match_ended=True
-        ).exclude(
-            date__gte=today
-        )
+        ).order_by('-date')[:5]  # Retrieve the 5 most recent ended matches
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['GET'])
     def upcoming_matches(self, request):
-        today = timezone.now().date()
-        tomorrow = today + timezone.timedelta(days=2)
+        now = timezone.now()
+        future_timeframe = now + timedelta(hours=96)  # Adjust the timeframe as needed
 
         queryset = self.get_queryset().filter(
-            date__gte=today,
-            date__lt=tomorrow,
+            date__gte=now,
+            date__lte=future_timeframe,
             is_match_ended=False
-        )
+        ).order_by('date')
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
 class GroupClubViewSet(viewsets.ModelViewSet):
     serializer_class = GroupClubSerializer
     queryset = GroupClub.objects.all()
