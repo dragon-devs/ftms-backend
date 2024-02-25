@@ -116,3 +116,13 @@ Q.idea/sonarlint/securityhotspotstore/1/b/1be4509075326782ccaed83304b71baa59136d
 Q.idea/sonarlint/securityhotspotstore/0/9/090fbab6f29bb1740f25c5b2a489961cc05898dc,8\a\8adf614050796c41b597a55dad91001e4cdc5748
 `
 0tournament/migrations/0035_delete_clubhistory.py,5\c\5c8c4853b53aa8103dcf5bea47e77cded31287ac
+<
+Pipfile.lock,e\5\e563262209b7c2e62d1869582c8134583baa2204
+;
+vercel.json,8\3\83188a989cfa5952424962eec8f2d0f97ba87e09
+9
+	manage.py,3\1\3156ad13e4d695cd526bbb7b031016ecba842270
+7
+Pipfile,1\5\15af4b3d30054104e85f65a444b1db188c5deefb
+^
+.football_tournaments_management_system/wsgi.py,e\6\e6c2726520a0ae072866af79f012a2e6402cd286

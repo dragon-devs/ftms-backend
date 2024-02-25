@@ -25,13 +25,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-o9*q22z1_yr0@o-+vjtqe!-bt553)0!+tii8!t5_58@v(g(j7d'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["ftmsapi.pythonanywhere.com", 'localhost', '127.0.0.1', '192.168.0.163']
+ALLOWED_HOSTS = [".vercel.app", "ftmsapi.pythonanywhere.com", 'localhost', '127.0.0.1', '192.168.0.163']
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # Add the URL of your frontend here
+    "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://ftms-drh.web.app",
     "http://192.168.0.163:3000",

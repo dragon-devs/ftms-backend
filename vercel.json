@@ -1,0 +1,13 @@
+{
+  "builds": [{
+    "src": "football_tournaments_management_system/wsgi.py",
+    "use": "@vercel/python",
+    "config": { "maxLambdaSize": "15mb", "runtine": "python3.11"}
+  }],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "football_tournaments_management_system/wsgi.py"
+    }
+  ]
+}
