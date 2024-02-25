@@ -126,3 +126,7 @@ Q.idea/sonarlint/securityhotspotstore/0/9/090fbab6f29bb1740f25c5b2a489961cc05898
 Pipfile,1\5\15af4b3d30054104e85f65a444b1db188c5deefb
 ^
 .football_tournaments_management_system/wsgi.py,e\6\e6c2726520a0ae072866af79f012a2e6402cd286
+W
+'knockout/migrations/0002_qualifyteam.py,8\8\88e6c76baa1820741f6580a097af4c89664ef7a8
+S
+#knockout/migrations/0001_initial.py,1\f\1f991d65d27ebf94ef3b9e99a3b19d719315572b
