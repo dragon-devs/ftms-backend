@@ -7,7 +7,6 @@ name = "pypi"
 django = "*"
 drf-nested-routers = "*"
 django-cors-headers = "*"
-mysqlclient = "*"
 gunicorn = "*"
 whitenoise = "*"
 
