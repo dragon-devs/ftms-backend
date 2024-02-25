@@ -1,15 +1,13 @@
-from io import BytesIO
 import random
+import uuid
+from io import BytesIO
 
+from PIL import Image, ImageDraw, ImageFont
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import models
-from django.core.files.images import ImageFile
-from PIL import Image, ImageDraw, ImageFont
-import os
-
 from django.db.models import Q
 
 from knockout.models import QualifyTeam
@@ -19,7 +17,6 @@ User = get_user_model()
 
 def create_club_image(instance):
     club_name = instance.club_name
-    # first_three_words = " ".join(club_name.split()[:3]).upper()
     first_three_words = club_name[:3].upper()
 
     # Load the background image
@@ -65,6 +62,7 @@ def create_club_image(instance):
 
 
 class Club(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     club_name = models.CharField(max_length=255)
     captain_name = models.CharField(max_length=100)
     phone_number = models.CharField(max_length=13)
@@ -92,7 +90,6 @@ class Club(models.Model):
         # Capitalize club_name and captain_name before saving
         self.club_name = self.club_name.capitalize()
         self.captain_name = self.captain_name.capitalize()
-
 
         if not self.club_image:  # Only create the image if it doesn't already exist
             image_data = create_club_image(self)
@@ -127,3 +124,30 @@ class Club(models.Model):
                                                 Q(semifinal__in=qualify_teams) |
                                                 Q(final__in=qualify_teams)).distinct()
         return tournaments
+
+
+
+# class ClubHistory(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='history')
+#     tournament = models.ForeignKey(MyTournament, on_delete=models.CASCADE)
+#     # group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
+#     played = models.IntegerField(default=0)  # Total games played by the club
+#     wins = models.IntegerField(default=0)
+#     losses = models.IntegerField(default=0)
+#     draws = models.IntegerField(default=0)
+#
+#     # Add more fields to store additional information about club performance
+#
+#     def __str__(self):
+#         return f"{self.club.club_name} - {self.tournament.tournament_name}"
+#
+#     def update_performance(self, result):
+#         if result == 'win':
+#             self.wins += 1
+#         elif result == 'loss':
+#             self.losses += 1
+#         else:
+#             self.draws += 1
+#         self.played = self.wins + self.losses + self.draws
+#         self.save()

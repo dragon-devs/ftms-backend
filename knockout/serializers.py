@@ -7,7 +7,7 @@ from tournament.serializers import GroupClubSerializer, MyTournamentSerializer
 class QualifyTeamSerializer(serializers.ModelSerializer):
     # tournament = MyTournamentSerializer()
 
-    team = GroupClubSerializer()
+    team = GroupClubSerializer(read_only=True)
     class Meta:
         model = QualifyTeam
         fields = ['id', 'tournament', 'team', 'group_position', 'r32w', 'r16w',
@@ -15,9 +15,9 @@ class QualifyTeamSerializer(serializers.ModelSerializer):
 
 
 class RoundOf32Serializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = RoundOf32
@@ -25,9 +25,9 @@ class RoundOf32Serializer(serializers.ModelSerializer):
 
 
 class RoundOf16Serializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = RoundOf16
@@ -35,9 +35,9 @@ class RoundOf16Serializer(serializers.ModelSerializer):
 
 
 class QuarterFinalSerializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = QuarterFinal
@@ -45,9 +45,9 @@ class QuarterFinalSerializer(serializers.ModelSerializer):
 
 
 class SemiFinalSerializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = SemiFinal
@@ -55,9 +55,9 @@ class SemiFinalSerializer(serializers.ModelSerializer):
 
 
 class ThirdPlaceSerializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = ThirdPlace
@@ -65,9 +65,9 @@ class ThirdPlaceSerializer(serializers.ModelSerializer):
 
 
 class FinalSerializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = Final
@@ -75,9 +75,9 @@ class FinalSerializer(serializers.ModelSerializer):
 
 
 class AllMatchSerializer(serializers.ModelSerializer):
-    team1 = QualifyTeamSerializer()
-    team2 = QualifyTeamSerializer()
-    tournament = MyTournamentSerializer()
+    team1 = QualifyTeamSerializer(read_only=True)
+    team2 = QualifyTeamSerializer(read_only=True)
+    tournament = MyTournamentSerializer(read_only=True)
 
     class Meta:
         model = Final

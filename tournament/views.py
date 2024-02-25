@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from ftms.models import Club
 from .forms import MyTournamentForm
-from .models import GroupClub, Group, ClubHistory, MyTournament, Match
+from .models import GroupClub, Group, MyTournament, Match
 
 from rest_framework.viewsets import ModelViewSet
 
@@ -28,6 +28,13 @@ class MyTournamentViewSet(viewsets.ModelViewSet):
     # lookup_url_kwarg = 'slug'  # Name of the URL keyword argument to capture the slug
 
     def create(self, request, *args, **kwargs):
+        tournament_name = request.data.get('tournament_name')
+
+        # Check if a tournament with the same name already exists
+        if MyTournament.objects.filter(tournament_name=tournament_name).exists():
+            return Response({'error': 'Tournament with the same name already exists.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         tournament_serializer = self.get_serializer(data=request.data)
         tournament_serializer.is_valid(raise_exception=True)
 
@@ -36,21 +43,19 @@ class MyTournamentViewSet(viewsets.ModelViewSet):
 
         tournament = tournament_serializer.save()
 
-        # Get the selected clubs data
         selected_clubs_data = clubs_serializer.validated_data
-
-        # Get the number of teams selected
         teams_selection = int(tournament_serializer.data.get('teams_selection'))
+        num_groups = (teams_selection + 3) // 4
 
-        # Calculate the number of groups needed
-        num_groups = (teams_selection + 3) // 4  # Round up to the nearest multiple of 4
+        for group in Group.GROUPS[:num_groups]:
+            try:
+                group_instance = Group.objects.get(tournament=tournament, group=group[0])
+            except Group.DoesNotExist:
+                group_instance = Group(tournament=tournament, group=group[0])
+                group_instance.save()
 
-        # Get the available groups
-        available_groups = Group.GROUPS[:num_groups]
+            print(f"Group {group[0]} instance created: {group_instance}")
 
-        # Create groups and assign clubs to each group
-        for group in available_groups:
-            group_instance = Group.objects.create(tournament=tournament, group=group[0])
             for j in range(4):
                 if len(selected_clubs_data) > 0:
                     club_data = selected_clubs_data.pop(0)
@@ -63,22 +68,12 @@ class MyTournamentViewSet(viewsets.ModelViewSet):
                         else:
                             club = Club.objects.get(club_name=club_name)
 
-                        # Debug: Print information about the club being assigned
-                        print(f"Assigned club to group {group[0]} position {j + 1}: {club}")
-
+                        setattr(group_instance, f'group_club_{j + 1}', club)
                     except ObjectDoesNotExist:
-                        # Handle the case where the club with the given ID or name does not exist
-                        print("Club does not exist:", club_id, club_name)
-                        # You can raise an exception, skip this club, or take other appropriate actions
-                        pass
+                        pass  # Handle the missing club scenario
                     except Club.MultipleObjectsReturned:
-                        # Handle the case where multiple clubs have the same name
-                        print("Multiple clubs with the same name:", club_name)
-                        # You can raise an exception, skip this club, or take other appropriate actions
-                        pass
+                        pass  # Handle the multiple clubs with the same name scenario
 
-                        # Assign the club to the group
-                    setattr(group_instance, f'group_club_{j + 1}', club)
             group_instance.save()
 
         headers = self.get_success_headers(tournament_serializer.data)
@@ -141,6 +136,8 @@ class MatchViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+
 class GroupClubViewSet(viewsets.ModelViewSet):
     serializer_class = GroupClubSerializer
     queryset = GroupClub.objects.all()
@@ -167,6 +164,7 @@ class GroupClubViewSet(viewsets.ModelViewSet):
             return Response(serializer.data)
         else:
             return Response({"detail": "Missing 'tournament_pk' parameter."}, status=400)
+
     """
         def perform_create(self, serializer):
         # Get the tournament ID from the URL

@@ -7,7 +7,7 @@ from ftms import models
 @admin.register(models.Club)
 class ClubAdmin(admin.ModelAdmin):
     actions = ['updating_teams_icons']
-    list_display = ['id', 'club_name', 'captain_name', 'phone_number', 'payment', 'created_at']
+    list_display = ['id','club_name', 'captain_name', 'phone_number', 'payment', 'created_at']
     search_fields = ('club_name', 'captain_name')
 
     @admin.action(description='update logos')

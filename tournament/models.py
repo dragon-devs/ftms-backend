@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime, time, timedelta
 
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -40,7 +41,7 @@ class MyTournament(models.Model):
         ('1', '1 Match'),
         ('2', '2 Matches'),
     )
-
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tournament_name = models.CharField(max_length=255)
     champion = models.ForeignKey(Club, on_delete=models.CASCADE, blank=True, null=True)
     slug = models.SlugField()
@@ -234,6 +235,7 @@ class MyTournament(models.Model):
 
 
 class GroupClub(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tournament = models.ForeignKey(MyTournament, on_delete=models.CASCADE)
     group = models.ForeignKey('Group', on_delete=models.PROTECT, null=True, blank=True)
     club_name = models.ForeignKey(Club, related_name='team', on_delete=models.CASCADE, null=True, blank=True)
@@ -320,6 +322,7 @@ class Group(models.Model):
         ('P', 'Group P'),
 
     )
+
     tournament = models.ForeignKey(MyTournament, on_delete=models.CASCADE, related_name='groups')
     group = models.CharField(max_length=1, choices=GROUPS)
     group_club_1 = models.ForeignKey(Club, on_delete=models.PROTECT, null=True, blank=True,
@@ -352,6 +355,43 @@ class Group(models.Model):
             assigned_clubs = [group.group_club_1, group.group_club_2, group.group_club_3, group.group_club_4]
             if any(gc in assigned_group_clubs for gc in assigned_clubs):
                 raise ValidationError('One or more teams are already assigned to other groups within this tournament.')
+
+    #
+    # def update_group_club(self, old_club, new_club, group_table_number):
+    #     if old_club:
+    #         old_group_club = GroupClub.objects.get(group=self, club_name=old_club)
+    #         old_group_club.delete()
+    #
+    #     if new_club:
+    #         GroupClub.objects.create(
+    #             group=self,
+    #             club_name=new_club,
+    #             tournament=self.tournament,
+    #             group_table_number=int(group_table_number)
+    #         )
+    #
+    # def save(self, *args, **kwargs):
+    #     with transaction.atomic():
+    #         if self.pk:
+    #             prev_instance = Group.objects.get(pk=self.pk)
+    #             self.update_group_club(prev_instance.group_club_1, self.group_club_1, 1)
+    #             # ... update other group_club fields ...
+    #
+    #         super().save(*args, **kwargs)
+    #
+    #         if not self.pk:
+    #             for j, club_field in enumerate(
+    #                     [self.group_club_1, self.group_club_2, self.group_club_3, self.group_club_4]):
+    #                 if club_field:
+    #                     GroupClub.objects.create(
+    #                         group=self,
+    #                         club_name=club_field,
+    #                         tournament=self.tournament,
+    #                         group_table_number=int(j + 1)
+    #                     )
+    #
+    # def __str__(self):
+    #     return dict(self.GROUPS)[self.group]
 
     def save(self, *args, **kwargs):
         if self.pk:
@@ -404,7 +444,6 @@ class Group(models.Model):
                     group=self,
                     club_name=self.group_club_1,
                     tournament=self.tournament,
-                    group_table_number=int(1)
                 )
 
             if self.group_club_2:
@@ -412,7 +451,6 @@ class Group(models.Model):
                     group=self,
                     club_name=self.group_club_2,
                     tournament=self.tournament,
-                    group_table_number=int(2)
                 )
 
             if self.group_club_3:
@@ -420,7 +458,6 @@ class Group(models.Model):
                     group=self,
                     club_name=self.group_club_3,
                     tournament=self.tournament,
-                    group_table_number=int(3)
                 )
 
             if self.group_club_4:
@@ -428,7 +465,6 @@ class Group(models.Model):
                     group=self,
                     club_name=self.group_club_4,
                     tournament=self.tournament,
-                    group_table_number=int(4)
                 )
         else:
             # Get the previous state of the object
@@ -522,32 +558,10 @@ class Group(models.Model):
 
 # models.py
 
-class ClubHistory(models.Model):
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name='history')
-    tournament = models.ForeignKey(MyTournament, on_delete=models.CASCADE)
-    # group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True, blank=True)
-    played = models.IntegerField(default=0)  # Total games played by the club
-    wins = models.IntegerField(default=0)
-    losses = models.IntegerField(default=0)
-    draws = models.IntegerField(default=0)
-
-    # Add more fields to store additional information about club performance
-
-    def __str__(self):
-        return f"{self.club.club_name} - {self.tournament.tournament_name}"
-
-    def update_performance(self, result):
-        if result == 'win':
-            self.wins += 1
-        elif result == 'loss':
-            self.losses += 1
-        else:
-            self.draws += 1
-        self.played = self.wins + self.losses + self.draws
-        self.save()
-
 
 class Match(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(MyTournament, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='matches')
     team_1 = models.ForeignKey(GroupClub, on_delete=models.CASCADE, related_name='team_1_matches')

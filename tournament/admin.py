@@ -19,26 +19,20 @@ class MyTournamentAdmin(admin.ModelAdmin):
 @admin.register(models.GroupClub)
 class GroupClubAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'group', 'club_name', 'played', 'wins', 'draw', 'lose', 'gf', 'ga', 'gd', 'points']
-    readonly_fields = ('tournament', 'gd')
     search_fields = ('club_name__club_name', 'tournament__tournament_name')
 
 
 @admin.register(models.Group)
 class GroupAdmin(admin.ModelAdmin):
     list_display = ['id', 'group', 'tournament', 'group_club_1', 'group_club_2', 'group_club_3', 'group_club_4']
-    readonly_fields = ('group', 'tournament')
     search_fields = ('tournament__tournament_name',)
 
 
-@admin.register(models.ClubHistory)
-class ClubHistoryAdmin(admin.ModelAdmin):
-    list_display = ['id', 'club', 'tournament', 'played', 'wins', 'losses', 'draws']
-    search_fields = ('tournament__tournament_name',)
 
 
 @admin.register(models.Match)
 class MatchAdmin(admin.ModelAdmin):
-    list_display = ['id', 'tournament', 'group', 'team_1', 'team_2', 'date', 'team_1_score', 'team_2_score',
+    list_display = ['tournament', 'group', 'team_1', 'team_2', 'date', 'team_1_score', 'team_2_score',
                     'is_match_ended', 'match_number']
     readonly_fields = ('group', 'tournament', 'team_1', 'team_2')
     search_fields = ('tournament__tournament_name',)

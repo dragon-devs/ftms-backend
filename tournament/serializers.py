@@ -121,7 +121,7 @@ class GroupClub_name(serializers.ModelSerializer):
 
 class GroupClubSerializer(serializers.ModelSerializer):
     # group = GroupSerializer()
-    club_name = ClubSerializer()
+    club_name = ClubSerializer(read_only=True)
 
     class Meta:
         model = GroupClub
@@ -130,10 +130,10 @@ class GroupClubSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    group_club_1 = ClubSerializer()
-    group_club_2 = ClubSerializer()
-    group_club_3 = ClubSerializer()
-    group_club_4 = ClubSerializer()
+    group_club_1 = ClubSerializer(read_only=True)
+    group_club_2 = ClubSerializer(read_only=True)
+    group_club_3 = ClubSerializer(read_only=True)
+    group_club_4 = ClubSerializer(read_only=True)
 
     class Meta:
         model = Group
@@ -177,9 +177,9 @@ class Club_name(serializers.ModelSerializer):
 
 
 class MatchSerializer(serializers.ModelSerializer):
-    tournament = MyTournamentSerializer()
-    team_1 = GroupClubSerializer()
-    team_2 = GroupClubSerializer()
+    tournament = MyTournamentSerializer(read_only=True)
+    team_1 = GroupClubSerializer(read_only=True)
+    team_2 = GroupClubSerializer(read_only=True)
 
     class Meta:
         model = Match

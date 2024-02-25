@@ -17,6 +17,9 @@
     <orderEntry type="jdk" jdkName="Pipenv (football_tournaments_management_system)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
+  <component name="SonarLintModuleSettings">
+    <option name="uniqueId" value="bc14520b-5494-44dd-a3e5-3ff6ab690354" />
+  </component>
   <component name="TemplatesService">
     <option name="TEMPLATE_CONFIGURATION" value="Django" />
     <option name="TEMPLATE_FOLDERS">

@@ -13,6 +13,8 @@ router.register(r'clubs', ClubViewSet, basename='clubs')
 router.register(r'matches', MatchViewSet, basename='matchs')
 router.register(r'groupclubs', GroupClubViewSet, basename='groupclub')
 router.register(r'qualifyteams', QualifyTeamViewSet, basename='qualifyteam')
+router.register(r'knockout', AllMatchesViewSet, basename='knockout-all')
+
 
 # Nested router for groups
 tournament_router = NestedDefaultRouter(router, r'tournaments', lookup='tournament')

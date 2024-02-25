@@ -1,3 +1,5 @@
+import uuid
+
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -13,6 +15,7 @@ tournament = 'tournament.MyTournament'
 
 
 class QualifyTeam(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tournament = models.ForeignKey('tournament.MyTournament', on_delete=models.CASCADE)
     group = models.ForeignKey('tournament.Group', on_delete=models.CASCADE, blank=True, null=True)
     team = models.ForeignKey('tournament.GroupClub', on_delete=models.CASCADE)
@@ -104,6 +107,34 @@ def update_tournament_current_stage(tournament):
         create_final_match(tournament)
 
 
+def update_qualify_teams(group):
+    # Get all the teams in the group
+    teams = group.groupclub_set.all()
+
+    # Sort the teams based on points, goal difference, goals for, etc.
+    teams = sorted(teams, key=lambda team: (
+        -team.points,  # Descending order of points
+        -team.gf,  # Descending order of goals for
+        team.played  # Ascending order of matches played (lower number of matches is better)
+    ))
+
+    # Qualify the top 2 teams
+    for i, team in enumerate(teams[:2], 1):
+        QualifyTeam.objects.update_or_create(
+            tournament=group.tournament,
+            group=group,
+            team=team,
+            defaults={'position': i}
+        )
+    # Update the tournament's current_stage after all group matches have ended
+    # Update the tournament's current_stage after all group matches have ended
+
+    Match = apps.get_model('tournament', 'Match')
+    all_matches_ended = Match.objects.filter(group=group, is_match_ended=False).exists()
+    if not all_matches_ended:
+        update_tournament_current_stage(group.tournament)
+
+
 def determine_r16w(match):
     # Check if both team1_score and team2_score are not None before making the comparison
     if match.team1_score is not None and match.team2_score is not None:
@@ -158,6 +189,8 @@ def create_round_of_32_matches(tournament):
 
 
 class RoundOf32(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(tournament, on_delete=models.CASCADE)
     team1 = models.ForeignKey(QualifyTeam, related_name='round_of_32_team1', on_delete=models.CASCADE, null=True,
                               blank=True)
@@ -208,7 +241,7 @@ def create_round_of_16_matches(tournament):
             print('directmatches16')
             qualified_teams = QualifyTeam.objects.filter(tournament=tournament).order_by('group', 'position')
 
-            # Group the qualified teams by group
+            # Group the qualified teams by groups
             groups = {}
             for team in qualified_teams:
                 if team.group in groups:
@@ -307,35 +340,9 @@ def create_round_of_16_matches(tournament):
                 return round_of_16_matches
 
 
-def update_qualify_teams(group):
-    # Get all the teams in the group
-    teams = group.groupclub_set.all()
-
-    # Sort the teams based on points, goal difference, goals for, etc.
-    teams = sorted(teams, key=lambda team: (
-        -team.points,  # Descending order of points
-        -team.gf,  # Descending order of goals for
-        team.played  # Ascending order of matches played (lower number of matches is better)
-    ))
-
-    # Qualify the top 2 teams
-    for i, team in enumerate(teams[:2], 1):
-        QualifyTeam.objects.update_or_create(
-            tournament=group.tournament,
-            group=group,
-            team=team,
-            defaults={'position': i}
-        )
-    # Update the tournament's current_stage after all group matches have ended
-    # Update the tournament's current_stage after all group matches have ended
-
-    Match = apps.get_model('tournament', 'Match')
-    all_matches_ended = Match.objects.filter(group=group, is_match_ended=False).exists()
-    if not all_matches_ended:
-        update_tournament_current_stage(group.tournament)
-
-
 class RoundOf16(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(tournament, on_delete=models.CASCADE)
     team1 = models.ForeignKey(QualifyTeam, related_name='round_of_16_team1', on_delete=models.CASCADE, null=True,
                               blank=True)
@@ -384,7 +391,6 @@ def create_quarterfinal_matches(tournament):
         qualified_teams_checking = QualifyTeam.objects.filter(tournament=tournament)
         if qualified_teams_checking.count() == 8 and all_group_matches_ended(tournament):
             print('16 teams tournament quarterfinals.')
-
             qualified_teams = QualifyTeam.objects.filter(tournament=tournament, r16w=True).order_by('group', 'position')
 
             # Group the qualified teams by group
@@ -491,6 +497,8 @@ def create_quarterfinal_matches(tournament):
 
 
 class QuarterFinal(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(tournament, on_delete=models.CASCADE)
     team1 = models.ForeignKey(QualifyTeam, related_name='quarter_final_team1', on_delete=models.CASCADE, null=True,
                               blank=True)
@@ -566,7 +574,7 @@ def create_semifinals_matches(tournament):
                         )
 
                         # Determine the winner and update the QualifyTeam instances
-                        count+1
+                        count += 1
                         round_of_16_matches.append(round_of_16_match)
                         paired_teams.append(team1)
                         paired_teams.append(team2)
@@ -637,6 +645,8 @@ def create_semifinals_matches(tournament):
 
 
 class SemiFinal(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(tournament, on_delete=models.CASCADE)
     team1 = models.ForeignKey(QualifyTeam, related_name='semi_final_team1', on_delete=models.CASCADE, null=True,
                               blank=True)
@@ -707,6 +717,8 @@ def create_third_place_match(tournament):
 
 
 class ThirdPlace(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(tournament, on_delete=models.CASCADE)
     team1 = models.ForeignKey(QualifyTeam, related_name='third_place_team1', on_delete=models.CASCADE, null=True,
                               blank=True)
@@ -765,6 +777,8 @@ def create_final_match(tournament):
 
 
 class Final(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
     tournament = models.ForeignKey(tournament, on_delete=models.CASCADE)
     team1 = models.ForeignKey(QualifyTeam, related_name='final_team1', on_delete=models.CASCADE, null=True,
                               blank=True)
