@@ -61,3 +61,11 @@ npm start
 
 8. **Access the Application:**
 Open your web browser and go to [http://localhost:8000](http://localhost:8000).
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues or pull requests.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
