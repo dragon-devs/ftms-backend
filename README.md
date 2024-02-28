@@ -1,4 +1,4 @@
-# Football Tournament Management System
+# Football Tournament Management System ⚽
 
 Welcome to the Football Tournament Management System – your all-in-one solution for organizing, managing, and overseeing football tournaments with unparalleled ease and efficiency.
 
@@ -27,25 +27,37 @@ Our system provides a seamless platform built on the latest web technologies, in
 ### Steps
 
 1. **Clone the Repository:**
+```
 git clone https://github.com/dragon-devs/ftms_api.git
+```
 
 2. **Navigate to the Project Directory:**
-`cd football-tournament-management`
-
+```
+cd football-tournament-management
+```
 3. **Install Frontend Dependencies:**
-`npm install`
+```
+npm install
+```
 
 4. **Install Backend Dependencies:**
-`pip install -r requirements.txt`
-
+```
+pip install -r requirements.txt
+```
 5. **Run Migrations:**
-`python manage.py migrate`
+```
+python manage.py migrate
+```
 
 6. **Start Django Development Server:**
-`python manage.py runserver`
+```
+python manage.py runserver
+```
 
 7. **Start Frontend Development Server:**
-`npm start`
+```
+npm start
+```
 
 8. **Access the Application:**
-Open your web browser and go to [http://localhost:3000](http://localhost:3000).
+Open your web browser and go to [http://localhost:8000](http://localhost:8000).
